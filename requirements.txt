@@ -1,0 +1,6 @@
+pandas~=2.2.2
+requests~=2.32.3
+bs4~=0.0.2
+beautifulsoup4~=4.12.3
+fastapi~=0.112.2
+starlette~=0.38.2
