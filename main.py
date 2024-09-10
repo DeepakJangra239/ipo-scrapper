@@ -1,10 +1,10 @@
 import datetime
+import re
 
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
 from starlette.responses import FileResponse
 
 app = FastAPI()
@@ -14,6 +14,7 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
 }
 response = requests.get(url, headers=headers)
+
 
 @app.get("/ipo")
 async def root():
@@ -80,12 +81,25 @@ async def root():
                 lambda x: datetime.datetime.strptime((x + "-" + datetime.datetime.today().year.__str__()),
                                                      '%d-%b-%Y').date() if x != '' else None)
 
+            # Extract the numeric percentage from 'Est Listing' column and convert to float
+            df['Est Listing Percentage'] = df['Est Listing'].apply(
+                lambda x: float(re.search(r'\((\d+.\d+)%\)', x).group(1)) if pd.notna(x) and re.search(
+                    r'\((\d+.\d+)%\)', x) else None)
+
             # Today's date (assuming you want to use the script execution date)
             today = pd.to_datetime('today').date()
 
             # Filter DataFrame
             filtered_df = df[(df['Fire Rating'] >= 3) & (df['Open'] <= today if df['Open'] is not None else True) & (
                 df['Close'] >= today if df['Close'] is not None else True)]
+
+            # Sort the DataFrame by 'Est Listing Percentage' in descending order
+            filtered_df = filtered_df.sort_values(by='Est Listing Percentage', ascending=False)
+
+            # Remove columns not required
+            filtered_df = filtered_df[filtered_df.columns.drop('Est Listing Percentage')]
+            filtered_df = filtered_df[filtered_df.columns.drop('GMP Updated')]
+            filtered_df = filtered_df[filtered_df.columns.drop('Lot')]
 
             # Generate HTML table content
             html_content = filtered_df.to_html(index=False)
