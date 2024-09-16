@@ -17,7 +17,7 @@ response = requests.get(url, headers=headers)
 
 
 @app.get("/ipo")
-async def root(sort: bool = False):
+async def root(sort: bool = False, close: bool = False):
     # If the GET request is successful, the status code will be 200
     if response.status_code == 200:
         # Get the content of the response
@@ -99,6 +99,9 @@ async def root(sort: bool = False):
             # Sort the DataFrame by 'Est Listing Percentage' in descending order
             if sort:
                 filtered_df = filtered_df.sort_values(by='Est Listing Percentage', ascending=False)
+
+            if close:
+                filtered_df = filtered_df[df['Close'] == today]
 
             # Remove columns not required
             filtered_df = filtered_df[filtered_df.columns.drop('Est Listing Percentage')]
