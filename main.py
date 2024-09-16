@@ -9,7 +9,7 @@ from starlette.responses import FileResponse
 
 app = FastAPI()
 # Send a GET request to the API
-url = "https://www.investorgain.com/report/live-ipo-gmp/331/?r2"
+url = "https://www.investorgain.com/report/live-ipo-gmp/331"
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
 }
@@ -71,6 +71,9 @@ async def root(sort: bool = False):
             df = pd.DataFrame(data[1:], columns=data[1])
             df.columns = hdata
             df.dropna(subset=['Price'], inplace=True)
+
+            # drop unrated IPOs
+            df = df[~df['Fire Rating'].str.contains("Rated")]
 
             # Convert 'Fire Rate' column to numeric (assuming it's a string representation of a fraction)
             df['Fire Rating'] = df['Fire Rating'].apply(lambda x: int(x.split('/')[0]))
